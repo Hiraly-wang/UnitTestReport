@@ -159,11 +159,14 @@ class TestRunner():
         suites = self.__classification_suite()
 
         if thread_count > 1:
+            # 每一个线程都共享同一个结果收集器
+            res = ReRunResult(count=count, interval=interval)
+            self.result.append(res)
+
             with ThreadPoolExecutor(max_workers=thread_count) as ts:
-                for i in suites:
-                    res = ReRunResult(count=count, interval=interval)
-                    self.result.append(res)
-                    ts.submit(i.run, result=res).add_done_callback(res.stopTestRun)
+                for suite in suites:
+                    for test in suite:
+                        ts.submit(test.run, result=res) # 将每一个独立的 test.run 作为一个任务提交
         else:
             res = ReRunResult(count=count, interval=interval)
             self.result.append(res)
