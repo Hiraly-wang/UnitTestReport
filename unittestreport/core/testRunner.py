@@ -164,9 +164,16 @@ class TestRunner():
             self.result.append(res)
 
             with ThreadPoolExecutor(max_workers=thread_count) as ts:
+                futures = []
                 for suite in suites:
                     for test in suite:
-                        ts.submit(test.run, result=res) # 将每一个独立的 test.run 作为一个任务提交
+                        future = ts.submit(test.run, result=res) # 将每一个独立的 test.run 作为一个任务提交
+                        futures.append(future)
+                # 等待所有线程执行完毕
+                for future in futures:
+                    future.result()
+            # 所有线程执行完毕后，停止测试运行
+            res.stopTestRun()
         else:
             res = ReRunResult(count=count, interval=interval)
             self.result.append(res)
